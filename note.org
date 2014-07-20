@@ -1,0 +1,312 @@
+* YUM
+  yum update --skip-broken
+
+* TrueCrypt
+  To uninstall TrueCrypt, please run 'truecrypt-uninstall.sh'.
+
+* chrome run as root
+  emacs /bin/chromium
+  exec -a "$0" "$HERE/chrome" "$@ --user-data-dir"
+
+* virtualbox、vmware硬盘文件相互转换方法
+  本来一直在寻求vb、vm的硬盘文件的转换方法，突然发现vb本来就可以使用vm的磁盘文件了（我的vb版本是4.1.12），有点汗颜呀，居然一直不知道，郁闷中。。。
+  当然既然已经查找了，总是有点收获的，具体如下：
+  1、vmware磁盘文件==》virtualbox磁盘文件
+  具体使用的是virtualbox自带的工具：VBoxManage，用法具体如下：
+  VBoxManage clonehd          |
+  [--format VDI|VMDK|VHD|RAW|]
+  [--variant Standard,Fixed,Split2G,Stream,ESX]
+  [--type normal|writethrough|immutable]
+  [--remember] [--existing]
+  例子：
+  vboxmanage clonehd "F:\win7\win7.vmdk" "F:\vb\win7.vdi" -format VDI
+  就这么简单，当然转换的时候有点慢，而且支持vmdk的分文件模式
+  当然如果需要Qemu转VMDK为RAW格式：（下载地址：http://www.onlinedown.net/soft/46950.htm）
+  qemu-img convert -f vmdk "F:\win7\win7.vmdk" -O raw "F:\VM\VirtualBox\Temp.img"
+  RAW转VDI：
+  vboxmanage convertfromraw "F:\VM\VirtualBox\Temp.img" "F:\VM\VirtualBox\win7.vdi" -format VDI
+  或者直接：
+  VBoxManage clonehd source.vmdk target.vdi --format VDI
+  2、virtualbox磁盘文件==》vmware磁盘文件
+  需要两次转换哦，首先：
+  vboxmanage clonehd /path1/xxx.vdi /path2/xxx.vmdk –format VMDK
+  然后：
+  vmware-vdiskmanager -r /path2/xxx.vmdk -t X /path2/xxx.vmdk
+  其中的X可以用
+  0 : 做成單一檔案(不預先配置)
+  1 : 切成2GB為一個檔案
+  2 : 預先配置檔案大小
+  3 : 預先配置以2GB為單位的檔案群
+  4 : 預先配置成ESX的格式
+  來代替，這裡我們可以直接使用”0″
+
+* Android source code
+** tools
+   * git
+   * curl
+   * repo:
+     curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/bin/repo ==>被墙==>
+     cd /opt/
+     git clone git://git.omapzoom.org/tools/repo.git
+     ln -s /opt/repo/ /usr/bin/repo
+** make a dir to storage source
+   mkdir xxx
+** goto xxx and run:
+   repo init -u git://git.omapzoom.org/platform/manifest -b android-4.4_r1
+
+** Blog
+   需要的工具：git,curl,repo
+   这三个工具当中，前两个比较容易安装：
+   apt-get install git
+   apt-get install curl
+   没有权限前面加sudo
+   第三个工具是python脚本，可以到google上面安装，但根据本人经验基本不会成功，因为被墙了。
+   地址如下（大家自己去试）：
+   $ curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+   解决办法：
+   git clone git://git.omapzoom.org/tools/repo.git
+   然后在下载的目录中找到repo文件
+   再执行:chmod a+x repo
+   然后创建一个符号连接（android源码下载不是一天能完成的，要打持久战）
+   sudo ln -s /home/tools/repo /usr/bin/repo
+   "/home/tools/repo"是你repo实际路径
+   然后新建一个目录，用来放你的源码
+   我的建在mkdir ~/android_source
+   然后在这个目录中执行
+   repo init -u git://git.omapzoom.org/platform/manifest -b android-4.4_r1
+   这时可能会提示要你配置邮箱和名字
+   执行如下命令
+   git config --global user.name "名字"
+   git config --global user.email "邮箱"
+   这时就已经配置好了，下一步就是同步代码：
+   repo sync
+   就开始下载源码了，时间可能会非常久，有可能几天，像我是长城宽带，下载速度能维持在180kb/s左右，是非常慢的，不这个镜像比google官方的要稳定，不会出现经常中断的现象。
+   另外推荐大一个网站可以在线浏览android的源码
+   http://androidxref.com/
+
+* wallpaper
+  鸟:http://www.artswallpapers.net/Best-Wallpapers/images/Best%20Wallpapers%2024.jpg
+  条纹:http://www.wallpapersgalaxy.com/wp-content/uploads/2011/09/best-abstract-widescreen-wallpaper.jpg
+  Avril_Lavigne:http://wallpapers.free-review.net/wallpapers/75/Avril_Lavigne.jpg
+
+* fedora常见的文件解决
+  http://fedoraproject.org/wiki/Common_F16_bugs#Setting_back_system_time_breaks_boot
+
+* 系统起来之后进入emergency mode
+  * 通过系统的log(journal -xb)可以发现有如下打印：
+    Jul 19 18:01:56 localhost.localdomain systemd-fsck[479]: /dev/mapper/fedora-root: UNEXPECTED INCONSISTENCY; RUN fsck MANUALLY.
+    Jul 19 18:01:56 localhost.localdomain systemd-fsck[479]: (i.e., without -a or -p options)
+    Jul 19 18:01:56 localhost.localdomain systemd-fsck[479]: fsck failed with error code 4.
+
+  * 原因：
+    系统突然掉电或异常关闭，导致文件系统的时间戳出现了问题
+
+  * 解决方式：
+    http://fedoraproject.org/wiki/Common_F16_bugs#Setting_back_system_time_breaks_boot
+    如上log显示是/dev/mapper/fedora-root出现了问题，故只需要对该分区文件系统进行修复即可。对应的命令如下:
+    fsck -y /dev/mapper/fedora-root
+    fsck是linux的执行文件修复检测的命令,需要注意的是执行这个命令需要该分区是空闲的或是umount状态，不然在执行时会abort。
+    如果是/dev/mapper/fedora-root，直接在emergency mode下执行上面会出现该分区busy的的提示而abort掉；因此我们需要修改/etc/fstab让该分区不自动挂载
+    （进入emergency mode 分区都是挂载为ro的）此时我们需要再remount一下该分区：
+    mount -o remount,rw /
+    这样整个分区都已经可读写了，然后编辑/etc/fstab 把/dev/mapper/fedora-root注掉，不让系统起来自动挂载，然后重启电脑，进入字符界面，登录root，执行
+    mount -o remount,rw /
+    fsck -y /dev/mapper/fedora-root
+    reboot
+
+
+* git learn
+  看日记学git： http://wenku.baidu.com/view/571169757fd5360cba1adbb0.html
+  Pro git: http://git.oschina.net/progit/
+
+  =============================================
+  rpm -qa|grep -i git
+  yum list|grep ^git
+  yum install git-all
+  =============================================
+  git --config -global user.name "philip"
+  git --config -global user.email "lpf_bird@163.com"
+
+
+  =================================================================
+  每个项目都有一个 Git 目录（译注：如果 git clone 出来的话，就是其中 .git 的目录；如果 git clone --bare 的话，新建的目录本身就是 Git 目录。），它是 Git 用来保存元数据和对象数据库的地方。该目录非常重要，每次克隆镜像仓库的时候，实际拷贝的就是这个目录里面的数据。
+
+  yum install curl-devel expat-devel gettext-devel \
+  openssl-devel zlib-devel
+
+  $ tar -zxf git-1.7.2.2.tar.gz
+  $ cd git-1.7.2.2
+  $ make prefix=/usr/local all
+  $ sudo make prefix=/usr/local install
+
+  $ git clone git://git.kernel.org/pub/scm/git/git.git
+
+  /etc/gitconfig 文件：系统中对所有用户都普遍适用的配置。若使用 git config 时用 --system 选项，读写的就是这个文件。
+  ~/.gitconfig 文件：用户目录下的配置文件只适用于该用户。若使用 git config 时用 --global 选项，读写的就是这个文件。
+  当前项目的 git 目录中的配置文件（也就是工作目录中的 .git/config 文件）：这里的配置仅仅针对当前项目有效。每一个级别的配置都会覆盖上层的相同配置，所以 .git/config 里的配置会覆盖 /etc/gitconfig 中的同名变量。
+  如果要在某个特定的项目中使用其他名字或者电邮，只要去掉 --global 选项重新配置即可，新的设定保存在当前项目的 .git/config 文件里。
+
+  $ git config --global user.name "lamda"
+  $ git config --global user.email lpf_bird@example.com
+  $ git config --global core.editor emacs
+  $ git config --global merge.tool vimdiff
+
+  要检查已有的配置信息，可以使用
+  $ git config --list
+  直接查阅某个环境变量的设定，只要把特定的名字跟在后面即可
+  $ git config user.name
+
+
+  $ git help <verb>
+  $ git <verb> --help
+  $ man git-<verb>
+  =================================================================
+  要对现有的某个项目开始用 Git 管理，只需到此项目所在的目录
+  $ git init
+  初始化后，在当前目录下会出现一个名为 .git 的目录，所有 Git 需要的数据和资源都存放在这个目录中
+  如果当前目录下有几个文件想要纳入版本控制，需要先用 git add 命令告诉 Git 开始对这些文件进行跟踪，然后提交
+  $ git add *.c
+  $ git add README
+  $ git commit -m 'initial project version'
+
+  从现有仓库克隆
+  使用的是 clone 而不是 checkout。这是个非常重要的差别，Git 收取的是项目历史的所有数据（每一个文件的每一个版本），服务器上有的数据克隆之后本地也都有了
+  git clone [url]
+  $ git clone git://github.com/schacon/grit.git
+  这会在当前目录下创建一个名为grit的目录，其中包含一个 .git 的目录，用于保存下载下来的所有版本记录，然后从中取出最新版本的文件拷贝。如果进入这个新建的 grit 目录，你会看到项目中的所有文件已经在里边了，准备好后续的开发和使用。
+  如果希望在克隆的时候，自己定义要新建的项目目录名称，可以在上面的命令末尾指定新的名字：
+  $ git clone git://github.com/schacon/grit.git mygrit
+
+  Git 支持许多数据传输协议。之前的例子使用的是 git:// 协议，不过你也可以用 http(s):// 或者 user@server:/path.git 表示的 SSH 传输协议
+
+  请记住，工作目录下面的所有文件都不外乎这两种状态：已跟踪或未跟踪
+  初次克隆某个仓库时，工作目录中的所有文件都属于已跟踪文件，且状态为未修改
+  在编辑过某些文件之后，Git将这些文件标为已修改。我们逐步把这些修改过的文件放到暂存
+  区域，直到最后一次性提交所有这些暂存起来的文件，如此重复
+
+  要确定哪些文件当前处于什么状态，可以用 git status 命令
+
+  git add 命令，开始跟踪当前目录下的文件。在 git add 后面可以指明要跟踪的文件或目录路径。如果是目录的话，就说明要递归跟踪该目录下的所有文件。 git add 的潜台词就是把目标文件快照放入暂存区域，也就是 add file into staged area，同时未曾跟踪过的文件标记为需要跟踪。
+
+  git add 命令（这是个多功能命令，根据目标文件的状态不同，此命令的效果也不同：可以用它开始跟踪新文件，或者把已跟踪的文件放到暂存区，还能用于合并时把有冲突的文件标记为已解决状态等）
+
+  运行了 git add 之后又作了修订的文件，需要重新运行 git add 把最新版本重新暂存起来
+
+  .gitignore 的文件，列出要忽略的文件模式,要养成一开始就设置好 .gitignore 文件的习惯，以免将来误提交这类无用的文件
+  文件 .gitignore 的格式规范如下：
+  所有空行或者以注释符号 ＃ 开头的行都会被 Git 忽略。
+  可以使用标准的 glob 模式匹配。
+  匹配模式最后跟反斜杠（/）说明要忽略的是目录。
+  要忽略指定模式以外的文件或目录，可以在模式前加上惊叹号（!）取反。
+
+  所谓的 glob 模式是指 shell 所使用的简化了的正则表达式。星号（*）匹配零个或多个任意字符；[abc] 匹配任何一个列在方括号中的字符（这个例子要么匹配一个 a，要么匹配一个 b，要么匹配一个 c）；问号（?）只匹配一个任意字符；如果在方括号中使用短划线分隔两个字符，表示所有在这两个字符范围内的都可以匹配（比如 [0-9] 表示匹配所有 0 到 9 的数字）。
+
+  # 此为注释 – 将被 Git 忽略
+  # 忽略所有 .a 结尾的文件
+  *.a
+  # 但 lib.a 除外
+  !lib.a
+  # 仅仅忽略项目根目录下的 TODO 文件，不包括 subdir/TODO
+  /TODO
+  # 忽略 build/ 目录下的所有文件
+  build/
+  # 会忽略 doc/notes.txt 但不包括 doc/server/arch.txt
+  doc/*.txt
+
+
+  实际上 git status 的显示比较简单，仅仅是列出了修改过的文件，如果要查看具体修改了什么地方，可以用 git diff 命令。能回答我们的两个问题了：当前做的哪些更新还没有暂存？有哪些更新已经暂存起来准备好了下次提交？ git diff 会使用文件补丁的格式显示具体添加和删除的行。
+
+  $ git diff 此命令比较的是工作目录中当前文件和暂存区域快照之间的差异，也就是修改之后还没有暂存起来的变化内容。
+  若要看已经暂存起来的文件和上次提交时的快照之间的差异，可以用 git diff --cached 命令。（Git 1.6.1 及更高版本还允许使用 git diff --staged，效果是相同的，但更好记些。）单单 git diff 不过是显示还没有暂存起来的改动，而不是这次工作和上次提交之间的差异。所以有时候你一下子暂存了所有更新过的文件后，运行 git diff 后却什么也没有，就是这个原因。
+
+  每次准备提交前，先用 git status 看下，是不是都已暂存起来了，然后再运行提交命令 git commit
+  $ git commit
+  这种方式会启动文本编辑器以便输入本次提交的说明。
+  默认的提交消息包含最后一次运行 git status 的输出，放在注释行里，另外开头还有一空行，供你输入提交说明
+  退出编辑器时，Git 会丢掉注释行，将说明内容和本次更新提交到仓库
+
+  可以用 -m 参数后跟提交说明的方式，在一行命令中提交更新：
+  $ git commit -m "Story 182: Fix benchmarks for speed"
+  记住，提交时记录的是放在暂存区域的快照，任何还未暂存的仍然保持已修改状态，可以在下次提交时纳入版本管理。每一次运行提交操作，都是对你项目作一次快照，以后可以回到这个状态，或者进行比较。
+
+ 用 git rm 命令从已跟踪文件清单中移除（确切地说，是从暂存区域移除），并连带从工作目录中删除指定的文件，这样以后就不会出现在未跟踪文件清单中了
+ 如果删除之前修改过并且已经放到暂存区域的话，则必须要用强制删除选项 -f（译注：即 force 的首字母），以防误删除文件后丢失修改的内容
+
+ 我们想把文件从 Git 仓库中删除（亦即从暂存区域移除），但仍然希望保留在当前工作目录中。换句话说，仅是从跟踪清单中删除。
+ $ git rm --cached readme.txt
+
+ $ git mv file_from file_to
+
+ $ mv README.txt README
+ $ git rm README.txt
+ $ git add README
+
+ 在提交了若干更新之后，又或者克隆了某个项目，想回顾下提交历史，可以使用 git log 命令查看
+ 默认不用任何参数的话，git log 会按提交时间列出所有的更新，最近的更新排在最上面
+ 我们常用 -p 选项展开显示每次提交的内容差异，用 -2 则仅显示最近的两次更新
+ $ git log -p -2
+ --stat，仅显示简要的增改行数统计
+ --pretty 选项，可以指定使用完全不同于默认格式的方式展示提交历史。比如用 oneline 将每个提交放在一行显示，这在提交数很大时非常有用。另外还有 short，full 和 fuller 可以用，展示的信息或多或少有些不同
+ format:
+ 选项 说明
+ %H 提交对象（commit）的完整哈希字串
+ %h 提交对象的简短哈希字串
+ %T 树对象（tree）的完整哈希字串
+ %t 树对象的简短哈希字串
+ %P 父对象（parent）的完整哈希字串
+ %p 父对象的简短哈希字串
+ %an 作者（author）的名字
+ %ae 作者的电子邮件地址
+ %ad 作者修订日期（可以用 -date= 选项定制格式）
+ %ar 作者修订日期，按多久以前的方式显示
+ %cn 提交者(committer)的名字
+ %ce 提交者的电子邮件地址
+ %cd 提交日期
+ %cr 提交日期，按多久以前的方式显示
+ %s 提交说明
+
+ $ git log --pretty=format:"%h %s" --graph 展示了每个提交所在的分支及其分化衍合情况
+
+ git log
+ 选项 说明
+ -p 按补丁格式显示每个更新之间的差异。
+ --stat 显示每次更新的文件修改统计信息。
+ --shortstat 只显示 --stat 中最后的行数修改添加移除统计。
+ --name-only 仅在提交信息后显示已修改的文件清单。
+ --name-status 显示新增、修改、删除的文件清单。
+ --abbrev-commit 仅显示 SHA-1 的前几个字符，而非所有的 40 个字符。
+ --relative-date 使用较短的相对时间显示（比如，“2 weeks ago”）。
+ --graph 显示 ASCII 图形表示的分支合并历史。
+ --pretty 使用其他格式显示历史提交信息。可用的选项包括 oneline，short，full，fuller 和 format（后跟指定格式）。
+
+ 按照时间作限制的选项，比如 --since 和 --until
+ $ git log --since=2.weeks
+ 具体的某一天（“2008-01-15”），或者是多久以前（“2 years 1 day 3 minutes ago”）
+ 选项 说明
+    -(n) 仅显示最近的 n 条提交
+    --since, --after 仅显示指定时间之后的提交。
+    --until, --before 仅显示指定时间之前的提交。
+    --author 仅显示指定作者相关的提交。
+    --committer 仅显示指定提交者相关的提交。
+
+ 用 --author 选项显示指定作者的提交，用 --grep 选项搜索提交说明中的关键字。（请注意，如果要得到同时满足这两个选项搜索条件的提交，就必须用 --all-match 选项。否则，满足任意一个条件的提交都会被匹配出来）
+ 另一个真正实用的git log选项是路径(path)，如果只关心某些文件或者目录的历史提交，可以在 git log 选项的最后指定它们的路径。因为是放在最后位置上的选项，所以用两个短划线（--）隔开之前的选项和后面限定的路径名。
+ $ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
+ --before="2008-11-01" --no-merges -- t/
+
+ 有时候我们提交完了才发现漏掉了几个文件没有加，或者提交信息写错了。想要撤消刚才的提交操作，可以使用 --amend 选项重新提交：
+ $ git commit --amend
+ 此命令将使用当前的暂存区域快照提交。如果刚才提交完没有作任何改动，直接运行此命令的话，相当于有机会重新编辑提交说明，但将要提交的文件快照和之前的一样。
+
+
+ 用 git reset HEAD <file>... 的方式取消暂存
+ use "git checkout -- <file>..." to discard changes in working directory
+
+ 记住，任何已经提交到 Git 的都可以被恢复。即便在已经删除的分支中的提交，或者用 --amend 重新改写的提交，都可以被恢复（关于数据恢复的内容见第九章）。所以，你可能失去的数据，仅限于没有提交过的，对 Git 来说它们就像从未存在过一样
+
+
+ 管理远程仓库的工作，包括添加远程库，移除废弃的远程库，管理各式远程库分支，定义是否跟踪这些分支，等等.
+
+ 用 git remote 命令，它会列出每个远程库的简短名字。在克隆完某个项目后，至少可以看到一个名为 origin 的远程库，Git 默认使用这个名字来标识你所克隆的原始仓库
+
+
